@@ -4,7 +4,11 @@
 
 # 사용법
 
-git clone ...
+git clone https://github.com/jsheo96/Hankyung_Crawler.git
+
+pip install -r requirements.txt
+
+python main.py
 
 hankyung = HankyungCrawler() 한국 경제 크롤러 초기화. db 파일 생성
 
