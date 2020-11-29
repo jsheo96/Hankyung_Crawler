@@ -2,8 +2,8 @@ import requests
 from bs4 import BeautifulSoup
 import datetime
 import sqlite3
+import time
 import tqdm
-
 
 class HankyungCrawler():
     def __init__(self, db_name='hankyung.db'):
@@ -32,7 +32,7 @@ class HankyungCrawler():
         return title, content
 
 
-    def update(self, numdays):
+    def update(self, numdays): # update db file. crawl news since numdays ago
         base = datetime.datetime.today()
         date_list = [base - datetime.timedelta(days=x) for x in range(numdays)]
         for date in date_list:
@@ -52,7 +52,7 @@ class HankyungCrawler():
                 self.cursor.execute('INSERT INTO news VALUES (?,?,?,?,?)', (date_str, field, title, content, url))
         self.con.commit()
 
-    def update_threaded(self, numdays, thread_num):
+    def update_threaded(self, numdays, thread_num): # update using multi-threading
         from threading import Thread
 
         base = datetime.datetime.today()
@@ -70,11 +70,9 @@ class HankyungCrawler():
                 if self.check_url_stored(url):
                     continue
                 target_url_and_dates.append((url, date_str))
-                # title, content = self.parse_news(url)
-                # field = url.split('.com/')[1].split('/')[0]
-                # self.cursor.execute('INSERT INTO news VALUES (?,?,?,?,?)', (date_str, field, title, content, url))
 
         news_list = []
+
         def parse_and_insert(url_and_dates):
             for url, date_str in tqdm.tqdm(url_and_dates):
                 title, content = self.parse_news(url)
@@ -88,8 +86,11 @@ class HankyungCrawler():
                 thread = Thread(target=parse_and_insert, args=(target_url_and_dates[url_length * i:],))
             else:
                 thread = Thread(target=parse_and_insert, args=(target_url_and_dates[url_length*i:url_length*(i+1)],))
-            thread.start()
             workers.append(thread)
+            # thread.start()
+        for worker in workers:
+            worker.start()
+            time.sleep(0.1)
 
         for worker in workers:
             worker.join()
@@ -97,17 +98,17 @@ class HankyungCrawler():
         self.cursor.executemany('INSERT INTO news VALUES (?,?,?,?,?)', news_list)
         self.con.commit()
 
-    def check_url_stored(self, url):
+    def check_url_stored(self, url): # check url is in database
         self.cursor.execute('SELECT * FROM news WHERE url=(?)',(url,))
         result = self.cursor.fetchall()
         return result
 
-    def get(self):
+    def get(self): # get all news in database
         self.cursor.execute('SELECT * FROM news')
         result = self.cursor.fetchall()
         return result
 
-    def delete_records(self):
+    def delete_records(self): # delete all new in database
         self.cursor.execute('DELETE FROM news')
         self.con.commit()
 
