@@ -117,4 +117,6 @@ if __name__ == "__main__":
     # hankyung.update(1)
     hankyung.update_threaded(2,4)
     news_list = hankyung.get()
-    print(len(news_list))
+    print('hankyung.db 내의 뉴스 개수: {}'.format(len(news_list)))
+    print('뉴스 샘플')
+    print(news_list[0])
