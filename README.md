@@ -6,6 +6,8 @@
 
 git clone https://github.com/jsheo96/Hankyung_Crawler.git
 
+cd Hankyung_Crawler
+
 pip install -r requirements.txt
 
 python main.py
